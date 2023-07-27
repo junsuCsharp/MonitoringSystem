@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using ChartDirector;
 using System.Threading;
+using System.Globalization;
 
 namespace MonitoringSystem.Forms
 {
@@ -42,6 +43,8 @@ namespace MonitoringSystem.Forms
         private Unit myUnitId;
         private Random random = new Random();
 
+        string Title;
+
         List<Size> szViewer = new List<Size>();
 
         string[] strMonthLabels = { "1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월" };
@@ -54,20 +57,35 @@ namespace MonitoringSystem.Forms
         int iColorLow = 51 << 16 | 102 << 8 | 255;
 
         int WhatDay;
+        int WhatYear;
 
         private void SubPageChart_Load(object sender, EventArgs e)
         {
             WhatDay = DateTime.Today.Day;
+            WhatYear = DateTime.Today.Year;
+
+            comboBox1.SelectedIndex = 0;
 
             dataBase.Connect();
             dataBase.Create_Table();
 
-            dataBase.test_data();
+            dataBase.Delete_Row();//필요없는 연도 정보 삭제
+
+            dataBase.test_data();//년,월,주 정보 로드
+            dataBase.prevYearData_1 = dataBase.prevDataLoad((WhatYear - 1));
+            dataBase.prevYearData_2 = dataBase.prevDataLoad((WhatYear - 2));
+            dataBase.prevYearData_3 = dataBase.prevDataLoad((WhatYear - 3));
+
+            //1~3년 전 정보 받아오기
+            dataBase.yearData((WhatYear - 1), dataBase.prevYearData_1, out MonitoringSystem.DataBase.prevYearOK_1, out MonitoringSystem.DataBase.prevYearNG_1);
+            dataBase.yearData((WhatYear - 2), dataBase.prevYearData_2, out MonitoringSystem.DataBase.prevYearOK_2, out MonitoringSystem.DataBase.prevYearNG_2);
+            dataBase.yearData((WhatYear - 3), dataBase.prevYearData_3, out MonitoringSystem.DataBase.prevYearOK_3, out MonitoringSystem.DataBase.prevYearNG_3);
 
             dataBase.test_month_dataLoad();
             dataBase.test_week_dataLoad();
             dataBase.test_year_dataLoad();
-            dataBase.test_day_data();
+
+            dataBase.test_day_data();//시간별 정보 로드
 
             szViewer.Add(winChartViewer1.Size);
 
@@ -95,6 +113,14 @@ namespace MonitoringSystem.Forms
                 dataBase.test_week_dataLoad();
                 dataBase.test_year_dataLoad();
                 dataBase.test_day_data();
+
+                WhatDay = DateTime.Today.Day;
+            }
+            if(WhatYear!=DateTime.Today.Year)
+            {
+                dataBase.Delete_Row();
+
+                WhatYear = DateTime.Today.Year;
             }
 
             dataBase.month_data();
@@ -118,7 +144,6 @@ namespace MonitoringSystem.Forms
             //double[] data2 = { 167, 190, 213, 267, 250, 320, 212, 199, 245, 267, 240, 310 };
             string[] labels = Chart_X_String(myUnitId);
 
-
             // The data for the bar chart
             //double[] data0 = { 100, 115, 165, 107, 67 };
             //double[] data1 = { 85, 106, 129, 161, 123 };
@@ -133,6 +158,8 @@ namespace MonitoringSystem.Forms
             // Create a XYChart object of size 600 x 360 pixels
             XYChart c = new XYChart(szViewer[(int)EChart.Bar].Width,szViewer[(int)EChart.Bar].Height + 20);
             //XYChart c = new XYChart(Convert.ToInt32(((double)(szViewer[(int)EChart.Bar].Width)) * FormMain.X_Scale), Convert.ToInt32(((double)(szViewer[(int)EChart.Bar].Height) + 20) * FormMain.Y_Scale));
+
+            c.addTitle(Title, null, 20);
 
             // Set default text color to dark grey (0x333333)
             c.setColor(Chart.TextColor, 0x333333);
@@ -163,7 +190,7 @@ namespace MonitoringSystem.Forms
 
             // Add the three data sets to the bar layer
             //layer.addDataSet(data0, 0xaaccee, "Server # 1");
-            layer.addDataSet(data0, iColorLow, "불량수량");
+            //layer.addDataSet(data0, iColorLow, "불량수량");
             layer.addDataSet(data1, iColorHigh, "생산수량");
             //layer.addDataSet(data2, 0xeeaa66, "Server # 3");
 
@@ -197,7 +224,6 @@ namespace MonitoringSystem.Forms
 
             //include tool tip for the chart
             //viewer.ImageMap = c.getHTMLImageMap("clickable", "", "title='{dataSetName} {xLabel}: {value}'");
-
         }
 
         string[] Chart_X_String(Unit unit)
@@ -206,6 +232,7 @@ namespace MonitoringSystem.Forms
             switch (unit)
             {
                 case Unit.Hour:
+                    comboBox1.Hide();
                     strXaxis = new string[24];
                     for (int idx = 0; idx < strXaxis.Length; idx++)
                     {
@@ -213,6 +240,7 @@ namespace MonitoringSystem.Forms
                     }
                     break;
                 case Unit.Day:
+                    comboBox1.Hide();
                     strXaxis = new string[DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month)];
                     for (int idx = 0; idx < strXaxis.Length; idx++)
                     {
@@ -220,6 +248,7 @@ namespace MonitoringSystem.Forms
                     }
                     break;
                 case Unit.Week:
+                    comboBox1.Hide();
                     strXaxis = new string[strWeekLabels.Length];
                     for (int idx = 0; idx < strXaxis.Length; idx++)
                     {
@@ -227,6 +256,7 @@ namespace MonitoringSystem.Forms
                     }
                     break;
                 case Unit.Month:
+                    comboBox1.Show();
                     strXaxis = new string[strMonthLabels.Length];
                     for (int idx = 0; idx < strXaxis.Length; idx++)
                     {
@@ -234,7 +264,6 @@ namespace MonitoringSystem.Forms
                     }
                     break;
             }
-
             return strXaxis;
         }
 
@@ -248,6 +277,7 @@ namespace MonitoringSystem.Forms
                     for (int idx = 0; idx < dXaxis_ok.Length; idx++)
                     {
                         dXaxis_ok[idx] = DataBase.hour_ok_arr[idx];
+                        Title = DateTime.Today.Date.ToString("M월d일");
                     }
                     break;
                 case Unit.Day:
@@ -255,6 +285,7 @@ namespace MonitoringSystem.Forms
                     for (int idx = 0; idx < dXaxis_ok.Length; idx++)
                     {
                         dXaxis_ok[idx] = DataBase.month_ok_arr[idx];
+                        Title = DateTime.Today.Month + "월";
                     }
                     break;
                 case Unit.Week:
@@ -262,13 +293,42 @@ namespace MonitoringSystem.Forms
                     for (int idx = 0; idx < dXaxis_ok.Length; idx++)
                     {
                         dXaxis_ok[idx] = DataBase.week_ok_arr[idx];
+                        Title = DateTime.Today.Year + "년" + dataBase.GetWeekOfYear(DateTime.Now, CultureInfo.CurrentCulture) + "주차";
                     }
                     break;
                 case Unit.Month:
                     dXaxis_ok = new double[12];
-                    for (int idx = 0; idx < dXaxis_ok.Length; idx++)
+                    if(comboBox1.SelectedIndex==0)
                     {
-                        dXaxis_ok[idx] = DataBase.year_ok_arr[idx];
+                        for (int idx = 0; idx < dXaxis_ok.Length; idx++)
+                        {
+                            dXaxis_ok[idx] = DataBase.year_ok_arr[idx];
+                            Title = DateTime.Today.Year + "년";
+                        }
+                    }
+                    else if(comboBox1.SelectedIndex == 1)
+                    {
+                        for (int idx = 0; idx < dXaxis_ok.Length; idx++)
+                        {
+                            dXaxis_ok[idx] = MonitoringSystem.DataBase.prevYearOK_1[idx];
+                            Title = DateTime.Today.Year - 1 + "년";
+                        }
+                    }
+                    else if (comboBox1.SelectedIndex == 2)
+                    {
+                        for (int idx = 0; idx < dXaxis_ok.Length; idx++)
+                        {
+                            dXaxis_ok[idx] = MonitoringSystem.DataBase.prevYearOK_2[idx];
+                            Title = DateTime.Today.Year - 2 + "년";
+                        }
+                    }
+                    else if (comboBox1.SelectedIndex == 3)
+                    {
+                        for (int idx = 0; idx < dXaxis_ok.Length; idx++)
+                        {
+                            dXaxis_ok[idx] = MonitoringSystem.DataBase.prevYearOK_3[idx];
+                            Title = DateTime.Today.Year - 3 + "년";
+                        }
                     }
                     break;
             }
@@ -303,9 +363,33 @@ namespace MonitoringSystem.Forms
                     break;
                 case Unit.Month:
                     dXaxis = new double[12];
-                    for (int idx = 0; idx < dXaxis.Length; idx++)
+                    if (comboBox1.SelectedIndex == 0)
                     {
-                        dXaxis[idx] = DataBase.year_ng_arr[idx];
+                        for (int idx = 0; idx < dXaxis.Length; idx++)
+                        {
+                            dXaxis[idx] = DataBase.year_ng_arr[idx];
+                        }
+                    }
+                    else if (comboBox1.SelectedIndex == 1)
+                    {
+                        for (int idx = 0; idx < dXaxis.Length; idx++)
+                        {
+                            dXaxis[idx] = MonitoringSystem.DataBase.prevYearNG_1[idx];
+                        }
+                    }
+                    else if (comboBox1.SelectedIndex == 2)
+                    {
+                        for (int idx = 0; idx < dXaxis.Length; idx++)
+                        {
+                            dXaxis[idx] = MonitoringSystem.DataBase.prevYearNG_2[idx];
+                        }
+                    }
+                    else if (comboBox1.SelectedIndex == 3)
+                    {
+                        for (int idx = 0; idx < dXaxis.Length; idx++)
+                        {
+                            dXaxis[idx] = MonitoringSystem.DataBase.prevYearNG_3[idx];
+                        }
                     }
                     break;
             }
@@ -322,8 +406,11 @@ namespace MonitoringSystem.Forms
         {
             ClientSize = new Size(Convert.ToInt32(this.Width * FormMain.X_Scale), Convert.ToInt32(this.Height * FormMain.Y_Scale));
             winChartViewer1.Size = new Size(Convert.ToInt32(winChartViewer1.Width * FormMain.X_Scale), Convert.ToInt32(winChartViewer1.Height * FormMain.Y_Scale));
-        }
 
+            comboBox1.Size = new Size(Convert.ToInt32(comboBox1.Width * FormMain.X_Scale), Convert.ToInt32(comboBox1.Height * FormMain.Y_Scale));
+            comboBox1.Font = new Font(Fonts.FontLibrary.Families[0], Convert.ToInt32(comboBox1.Font.Size * FormMain.min_Scale));
+            comboBox1.Location = new Point(Convert.ToInt32(comboBox1.Location.X * FormMain.X_Scale), Convert.ToInt32(comboBox1.Location.Y * FormMain.Y_Scale));
+        }
     }
 }
 

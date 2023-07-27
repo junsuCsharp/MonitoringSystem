@@ -69,6 +69,7 @@ namespace MonitoringSystem.Forms
             "코봇 비상정지 상태", "코봇 서보온 꺼짐", "메인공압 비정상", "진공 흡기 비정상", "개별2 공압 비정상", "컨베어 메인공압 비정상" };
 
         Stopwatch swCompleteTime = new Stopwatch();
+        long Time = 0;
 
         /// <summary>
         /// 2023.05.?? 김준수 작성
@@ -115,22 +116,31 @@ namespace MonitoringSystem.Forms
             double[] copleteTime_ = Time_Hour_Min_Sec(completeTime);
             labelCompleteTime.Text = copleteTime_[1].ToString("00") + " : " + copleteTime_[2].ToString("00");
 
-
             //실제 소요 시간
             if (FormMain.workState == "Start")
             {
                 swCompleteTime.Start();
+                Time = swCompleteTime.ElapsedMilliseconds;
             }
             else if (FormMain.workState == "Pause")
             {
                 swCompleteTime.Stop();
+                Time = swCompleteTime.ElapsedMilliseconds;
             }
-            else
+            else if(FormMain.workState== "Cancel")
             {
                 swCompleteTime.Reset();
             }
+            else if (FormMain.workState == "Wait")
+            {
+                swCompleteTime.Reset();
+            }
+            else
+            {
+                Time = swCompleteTime.ElapsedMilliseconds;
+            }
 
-            double[] arrCompletTime = Time_Hour_Min_Sec((double)swCompleteTime.ElapsedMilliseconds / 1000);
+            double[] arrCompletTime = Time_Hour_Min_Sec((double)Time / 1000);
             labelCompleteTimeSpan.Text = arrCompletTime[1].ToString("00") + " : " + arrCompletTime[2].ToString("00");
 
             //박스 당 소요 시간

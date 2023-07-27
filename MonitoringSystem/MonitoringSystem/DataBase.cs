@@ -24,23 +24,13 @@ namespace MonitoringSystem
         public static string[] Month_ok_list = new string[DateTime.DaysInMonth(DateTime.Today.Year, DateTime.Today.Month)];
         public static string[] Month_ng_list = new string[DateTime.DaysInMonth(DateTime.Today.Year, DateTime.Today.Month)];
 
-        int OK_cnt;
-        int NG_cnt;
-        int alarm_cnt;
-        int model_num;
-
-        string test_date;
-        string test_data1;
-        string test_data2;
-        string test_data_year;
-        string test_data_month;
-        string test_data_day;
-        string test_data_week;
-
         const int year_length = 366;
         const int day_length = 24;
 
-        string[,] test_data_arr = new string[7, year_length];
+        public string[,] test_data_arr = new string[7, year_length];
+        public string[,] prevYearData_1 = new string[7, year_length];
+        public string[,] prevYearData_2 = new string[7, year_length];
+        public string[,] prevYearData_3 = new string[7, year_length];
 
         int[] test_year_ok_arr = new int[12];
         int[] test_year_ng_arr = new int[12];
@@ -64,6 +54,14 @@ namespace MonitoringSystem
 
         int test_cnt = 0;
 
+        //1~3년 전 정보 저장
+        public static int[] prevYearOK_1 = new int[12];
+        public static int[] prevYearNG_1 = new int[12];
+        public static int[] prevYearOK_2 = new int[12];
+        public static int[] prevYearNG_2 = new int[12];
+        public static int[] prevYearOK_3 = new int[12];
+        public static int[] prevYearNG_3 = new int[12];
+
         public void Connect()//DB파일 생성, 연결
         {
             DBConnect = new SQLiteConnection("Data Source=" + DB_PATH + SQLITE_DB);
@@ -83,7 +81,6 @@ namespace MonitoringSystem
 
                 SQLiteCommand command = new SQLiteCommand(sql, DBConnect);
                 int result = command.ExecuteNonQuery();
-
             }
 
             catch
@@ -105,13 +102,27 @@ namespace MonitoringSystem
             int robotDriveTime=Forms.PageMain.TotalTime;
             int alarm_cnt = Forms.PageMain.alarmCnt;
             int grip_cnt = Forms.PageMain.GripCount;
-            OK_cnt = Externs.Robot_Modbus_Table.lstModbusData[04].iCurrData;
-            NG_cnt = Externs.Robot_Modbus_Table.lstModbusData[05].iCurrData;
-            model_num = Externs.Robot_Modbus_Table.lstModbusData[01].iCurrData;
+            int OK_cnt = Externs.Robot_Modbus_Table.lstModbusData[04].iCurrData;
+            int NG_cnt = Externs.Robot_Modbus_Table.lstModbusData[05].iCurrData;
+            int model_num = Externs.Robot_Modbus_Table.lstModbusData[01].iCurrData;
 
 
             string sql = "insert into members (date, time, OK, NG, year, month, day, hour, week, AlarmCount, RobotDriveTime, GripCount) values " +
-                "('" + date + "', '" + time + "', " + OK_cnt + ", " + NG_cnt + ", '" + year + "', '" + month + "', '" + day + "', '" + hour + "', '" + week + "', " + alarm_cnt + ", '" + robotDriveTime + "', ," + grip_cnt + "')";
+                "('" + date + "', '" + time + "', " + OK_cnt + ", " + NG_cnt + ", '" + year + "', '" + month + "', '" + day + "', '" + hour + "', '" + week + "', '" + alarm_cnt + "', '" + robotDriveTime + "', '" + grip_cnt + "')";
+
+            SQLiteCommand command = new SQLiteCommand(sql, DBConnect);
+            int result = command.ExecuteNonQuery();
+        }
+
+        /// <summary>
+        /// 올해 + 지난 3년간 데이터만 저장 하기 위해 올해 - 4년이하의 데이터는 삭제 한다.
+        /// 폼 로드, 연도 변화 감지 시에 실행 한다.
+        /// </summary>
+        public void Delete_Row()
+        {
+            int thisYear = DateTime.Now.Year;
+
+            string sql = "DELETE FROM members WHERE year <= '" + (thisYear - 4) + "'";
 
             SQLiteCommand command = new SQLiteCommand(sql, DBConnect);
             int result = command.ExecuteNonQuery();
@@ -138,6 +149,14 @@ namespace MonitoringSystem
 
         public void test_data()//테스트 데이터(날짜별 최대 OK NG 저장)
         {
+            string test_date;
+            string test_data1;
+            string test_data2;
+            string test_data_year;
+            string test_data_month;
+            string test_data_day;
+            string test_data_week;
+
             test_cnt = 0;
 
             //전체 읽어 오는 구문
@@ -150,31 +169,6 @@ namespace MonitoringSystem
             string date = DateTime.Now.ToString("yyyy/MM/dd");
 
             string sql = "select date, max(OK), max(NG), year, month, day, week from members WHERE date NOT in ('" + date + "') group by date";
-
-            //2023.07.24 System.InvalidOperationException: 'Connection was closed, statement was terminated' 에러확인을 위해 임시 삭제
-            //SQLiteCommand cmd = new SQLiteCommand(sql, DBConnect);
-            //SQLiteDataReader rdr = cmd.ExecuteReader();
-
-            //while (rdr.Read())
-            //{
-            //    test_date = rdr["date"].ToString();
-            //    test_data1 = rdr["max(OK)"].ToString();
-            //    test_data2 = rdr["max(NG)"].ToString();
-            //    test_data_year = rdr["year"].ToString();
-            //    test_data_month = rdr["month"].ToString();
-            //    test_data_day = rdr["day"].ToString();
-            //    test_data_week = rdr["week"].ToString();
-
-            //    test_data_arr[0, test_cnt] = test_date;
-            //    test_data_arr[1, test_cnt] = test_data1;
-            //    test_data_arr[2, test_cnt] = test_data2;
-            //    test_data_arr[3, test_cnt] = test_data_year;
-            //    test_data_arr[4, test_cnt] = test_data_month;
-            //    test_data_arr[5, test_cnt] = test_data_day;
-            //    test_data_arr[6, test_cnt] = test_data_week;
-
-            //    test_cnt++;
-            //}
 
             //2023.07.24 using 사용하여 database read
             using (SQLiteCommand cmd = new SQLiteCommand(sql, DBConnect))
@@ -206,6 +200,73 @@ namespace MonitoringSystem
             }
         }
 
+        /// <summary>
+        /// 지난 년도 정보 불러오기
+        /// 폼 로드 할 때랑 연도 바뀔 때 실행
+        /// </summary>
+        public string[,] prevDataLoad(int Year)
+        {
+            string test_date;
+            string test_data1;
+            string test_data2;
+            string test_data_year;
+            string test_data_month;
+            string test_data_day;
+            string test_data_week;
+
+            string[,] prevYearData = new string[7, year_length];
+
+            string sql = "select date, max(OK), max(NG), year, month, day, week from members WHERE year = " + Year + " group by date";
+
+            using (SQLiteCommand cmd = new SQLiteCommand(sql, DBConnect))
+            {
+                using (SQLiteDataReader rdr = cmd.ExecuteReader())
+                {
+                    while (rdr.Read())
+                    {
+                        test_date = rdr["date"].ToString();
+                        test_data1 = rdr["max(OK)"].ToString();
+                        test_data2 = rdr["max(NG)"].ToString();
+                        test_data_year = rdr["year"].ToString();
+                        test_data_month = rdr["month"].ToString();
+                        test_data_day = rdr["day"].ToString();
+                        test_data_week = rdr["week"].ToString();
+
+                        prevYearData[0, test_cnt] = test_date;
+                        prevYearData[1, test_cnt] = test_data1;
+                        prevYearData[2, test_cnt] = test_data2;
+                        prevYearData[3, test_cnt] = test_data_year;
+                        prevYearData[4, test_cnt] = test_data_month;
+                        prevYearData[5, test_cnt] = test_data_day;
+                        prevYearData[6, test_cnt] = test_data_week;
+
+                        test_cnt++;
+                    }
+                    rdr.Close();
+                }
+            }
+
+            return prevYearData;
+        }
+
+        /// <summary>
+        /// test용 - 전체 데이터 받아서 월별로 쪼개기
+        /// </summary>
+        public void yearData(int year, string[,] TotalData, out int[] OKData, out int[] NGData)
+        {
+            OKData = new int[12];
+            NGData = new int[12];
+
+            for (int i = 0; i < year_length; i++)
+            {
+                if (TotalData[3, i] == year.ToString())
+                {
+                    OKData[Convert.ToInt32(TotalData[4, i]) - 1] += Convert.ToInt32(TotalData[1, i]);
+                    NGData[Convert.ToInt32(TotalData[4, i]) - 1] += Convert.ToInt32(TotalData[2, i]);
+                }
+            }
+        }
+
         //데이터 베이스에서 읽어 온 정보를 월별 데이터로 변환
         public void test_year_dataLoad()
         {
@@ -220,9 +281,6 @@ namespace MonitoringSystem
                     test_year_ng_arr[Convert.ToInt32(test_data_arr[4, i]) - 1] += Convert.ToInt32(test_data_arr[2, i]);
                 }
             }
-            //year_data에서 당일 데이터 추가 예정
-            //year_ok_arr = test_year_ok_arr;
-            //year_ng_arr = test_year_ng_arr;
         }
 
         //월별 데이터에 당일 데이터 추가
@@ -363,6 +421,10 @@ namespace MonitoringSystem
 
         public void test_day_data()//당일 데이터
         {
+            string test_data1;
+            string test_data2;
+            string test_data_day;
+
             Array.Clear(test_hour_ok_arr, 0, test_hour_ok_arr.Length);
             Array.Clear(test_hour_ng_arr, 0, test_hour_ng_arr.Length);
 

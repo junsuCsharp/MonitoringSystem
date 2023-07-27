@@ -32,6 +32,7 @@ namespace MonitoringSystem.Forms
             this.components = new System.ComponentModel.Container();
             this.winChartViewer1 = new ChartDirector.WinChartViewer();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
+            this.comboBox1 = new System.Windows.Forms.ComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.winChartViewer1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -49,12 +50,28 @@ namespace MonitoringSystem.Forms
             this.timer1.Interval = 500;
             this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
             // 
+            // comboBox1
+            // 
+            this.comboBox1.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBox1.Font = new System.Drawing.Font("굴림", 12.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.comboBox1.FormattingEnabled = true;
+            this.comboBox1.Items.AddRange(new object[] {
+            "올 해",
+            "1년 전",
+            "2년 전",
+            "3년 전"});
+            this.comboBox1.Location = new System.Drawing.Point(3, 3);
+            this.comboBox1.Name = "comboBox1";
+            this.comboBox1.Size = new System.Drawing.Size(100, 25);
+            this.comboBox1.TabIndex = 1;
+            // 
             // SubPageChart
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Control;
             this.ClientSize = new System.Drawing.Size(1622, 541);
+            this.Controls.Add(this.comboBox1);
             this.Controls.Add(this.winChartViewer1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.Name = "SubPageChart";
@@ -69,5 +86,6 @@ namespace MonitoringSystem.Forms
 
         private ChartDirector.WinChartViewer winChartViewer1;
         private System.Windows.Forms.Timer timer1;
+        private System.Windows.Forms.ComboBox comboBox1;
     }
 }

@@ -533,7 +533,7 @@ namespace MonitoringSystem
             }
             else
             {
-                label4.Text = "작업 상태 : None";
+                //label4.Text = "작업 상태 : None";
                 workState = "None";
             }
         }

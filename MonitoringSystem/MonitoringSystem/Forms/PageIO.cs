@@ -222,15 +222,15 @@ namespace MonitoringSystem.Forms
             }
         }
 
-        void Log_IO_data()
-        {
-            DateTime nowDate = DateTime.Now;
+        //void Log_IO_data()
+        //{
+        //    DateTime nowDate = DateTime.Now;
 
-            string log = $"| {nowDate:yyyy-MM-dd HH:mm:ss} | {DI_1} | {DI_2} | {DI_3} | {DO_1} | {DO_2} |";
+        //    string log = $"| {nowDate:yyyy-MM-dd HH:mm:ss} | {DI_1} | {DI_2} | {DI_3} | {DO_1} | {DO_2} |";
 
-            Common.ClsLogFile.Write_IO_Data($"{nowDate:yyyy-MM-dd_}IO_Data.log", log);
+        //    Common.ClsLogFile.Write_IO_Data($"{nowDate:yyyy-MM-dd_}IO_Data.log", log);
 
-        }
+        //}
 
         void IO_Data_Sort()
         {
@@ -262,7 +262,7 @@ namespace MonitoringSystem.Forms
 
             IO_Display();
 
-            Log_IO_data();
+            //Log_IO_data();
 
             IO_PrevData_Save();
         }

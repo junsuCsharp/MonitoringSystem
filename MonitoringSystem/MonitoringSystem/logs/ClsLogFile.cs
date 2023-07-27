@@ -56,8 +56,10 @@ namespace Common
                     {
                         using (StreamWriter sw = File.CreateText(sFile))
                         {
-                            sw.WriteLine("|      Date Time      | 가동률 | 모델정보 | 생산수량 | 불량수량 | 알람코드 | 작업 진행 상황 | 박스 진행 상황 | 레이어 진행상황 | 박스 정보 | 팔레트 정보 " +
-                                "| 간지 사용 유무 | 리프트 높이 | 적재방향 | 로봇 스피드 | BOX SORT CYLINDER | SAFETY LADAR SENSOR | LABEL ALINE | 로봇 상태 | 로봇 서보 온 |");
+                            sw.WriteLine("|      Date Time      | 가동률 | 모델정보 | 작업전체수량 | 작업진행수량 | 생산수량 | 불량수량 | 알람코드 | 박스 X (mm) | 박스 Y (mm) | 박스 Z (mm) " +
+                                "| 박스 무게 | 팔레트 X (mm) | 팔레트 Y (mm) | 팔레트 Z (mm) | 박스 패턴 박스 수 | 박스 패턴 레이어 수 | 현재 박스 수 | 현재 레이어 수 | 간지 사용 유무 " +
+                                "| 리프트 높이 | 적재방향 | 로봇 속도 | BOX SORT CYLINDER USE | SAFETY LADAR SENSOR USE | LABEL ALINE USE | Robot State | Servo On Robot | DI #1 " +
+                                "| DI #2 | DI #3 | DO #1 | DO #2 | 작업 상태 | 박스 소요 시간 | 전체 소요 시간 |");
                         }
                     }
                     using (StreamWriter sw = File.AppendText(sFile))
@@ -72,7 +74,7 @@ namespace Common
             }
         }
 
-
+        //IO분리해서 저장하지 않고 한번에 저장 중
         public static void Write_IO_Data(string file, string logMsg)
         {
             try
